@@ -1,3 +1,8 @@
+/**
+ *  Simon IO Roller Blind
+ *  Copyright 2022 Sergey Kolodyazhnyy
+ */
+
 import groovy.transform.Field
 
 metadata {
