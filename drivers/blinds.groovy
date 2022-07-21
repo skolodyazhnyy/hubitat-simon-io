@@ -1,24 +1,24 @@
-definition(
-  name: "Simon IO Roller Blind",
-  namespace: "simonio",
-  author: "Sergey Kolodyazhnyy"
-) {
-  capability "Actuator"
-  capability "Configuration"
-  capability "SwitchLevel"
-  capability "Refresh"
+import groovy.transform.Field
 
-  attribute "calibrated", "ENUM"
-  attribute "state", "ENUM"
+metadata {
+  definition(name: "Simon IO Roller Blind", namespace: "simonio", author: "Sergey Kolodyazhnyy") {
+    capability "Actuator"
+    capability "Configuration"
+    capability "SwitchLevel"
+    capability "Refresh"
 
-  command "open"
-  command "close"
-  command "stop"
-  command "identify"
-  command "calibrate"
+    attribute "calibrated", "ENUM"
+    attribute "state", "ENUM"
 
-  fingerprint deviceId: "0000", inClusters: "0x5E,0x86,0x25,0x26,0x72,0x5A,0x59,0x85,0x7A,0x73,0x70", mfr: "0267", prod: "0004", deviceJoinName: "Simon IO Roller Blind"
+    command "open"
+    command "close"
+    command "stop"
+    command "identify"
+    command "calibrate"
 
+    fingerprint deviceId: "0000", inClusters: "0x5E,0x86,0x25,0x26,0x72,0x5A,0x59,0x85,0x7A,0x73,0x70", mfr: "0267", prod: "0004", deviceJoinName: "Simon IO Roller Blind"
+  }
+  
   preferences {
     input name: "logEnable", type: "bool", title: "Enable logging", defaultValue: false
     input name: "associationLed", type: "bool", title: "Association LED", defaultValue: false
@@ -29,7 +29,6 @@ definition(
   }
 }
 
-import groovy.transform.Field
 
 // Configuration parameter numbers
 @Field final CONFIG_ASSOCIATION_LED = 1
@@ -199,7 +198,7 @@ void zwaveEvent(hubitat.zwave.commands.configurationv2.ConfigurationBulkReport r
   }
 
   if (offset <= CONFIG_DOWN_TIME && length + offset > CONFIG_DOWN_TIME) {
-    value report.scaledConfigurationValues[5 - offset]
+    value = report.scaledConfigurationValues[5 - offset]
     device.updateSetting("downTime", [type:"number", value: value])
   }
 
