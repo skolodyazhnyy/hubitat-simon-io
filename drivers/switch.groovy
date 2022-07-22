@@ -10,7 +10,8 @@ metadata {
     capability "Configuration"
     capability "Switch"
     capability "Refresh"
-
+    capability "PowerMeter"
+    
     command "identify"
 
     fingerprint deviceId: "0000", inClusters: "0x5E,0x86,0x25,0x72,0x5A,0x59,0x85,0x73,0x70,0x7A,0x32", mfr: "0267", prod: "0001", deviceJoinName: "Simon IO Switch"
@@ -57,6 +58,7 @@ def refresh() {
   return [
     secure(zwave.basicV1.basicGet()),
     secure(zwave.configurationV2.configurationBulkGet(numberOfParameters: 23, parameterOffset: 1)),
+    secure(zwave.meterV4.meterGet(rateType: 1, scale: 2))
   ]
 }
 
@@ -109,6 +111,7 @@ void parse(String description){
 
   hubitat.zwave.Command cmd = zwave.parse(description, [
     0x20:2, // Basic Command Class V2
+    0x32:4, // MeterReport V4
     0x70:2, // Configuration Command Class V2
     0x86:2, // VersionReport V2
 ])
@@ -174,6 +177,17 @@ void zwaveEvent(hubitat.zwave.commands.configurationv2.ConfigurationBulkReport r
     value = pressActionName(report.scaledConfigurationValues[CONFIG_PRESS_ACTION - offset])
     device.updateSetting("pressAction", [type:"enum", value: value])
   }
+}
+
+// MeterReport communicates power consumption metrics
+void zwaveEvent(hubitat.zwave.commands.meterv4.MeterReport report){
+  if (report.meterType != report.METER_TYPE_ELECTRIC_METER || report.rateType != 1 || report.scale != 2) {
+    return
+  }
+  
+  if (logEnable) log.debug("Power consumption is ${report.scaledMeterValue}W")
+  
+  sendEvent(name: "power", value: report.scaledMeterValue)
 }
 
 // VersionReport communicates firware and protocol versions.
