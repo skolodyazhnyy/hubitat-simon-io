@@ -20,7 +20,7 @@ metadata {
       [name: "Method*", type: "ENUM", constraints: ["Better edge", "Trailing Edge", "Leading Edge"]]
     ]
 
-    fingerprint deviceId: "0062", inClusters: "0x5E,0x86,0x26,0x72,0x5A,0x59,0x85,0x73,0x70,0x7A,0x32", mfr: "0267", prod: "0007", deviceJoinName: "Simon IO Switch"
+    fingerprint deviceId: "0062", inClusters: "0x5E,0x86,0x26,0x72,0x5A,0x59,0x85,0x73,0x70,0x7A,0x32", mfr: "0267", prod: "0007", deviceJoinName: "Simon IO Dimmable Switch"
   }
   
   preferences {
