@@ -9,15 +9,11 @@ metadata {
   definition(name: "Simon IO Roller Blind", namespace: "simonio", author: "Sergey Kolodyazhnyy") {
     capability "Actuator"
     capability "Configuration"
-    capability "SwitchLevel"
+    capability "WindowShade"
     capability "Refresh"
 
     attribute "calibrated", "ENUM"
-    attribute "state", "ENUM"
 
-    command "open"
-    command "close"
-    command "stop"
     command "identify"
     command "calibrate"
 
@@ -48,25 +44,34 @@ metadata {
 
 // Send command to open blinds all the way up
 def open() {
-  return setLevel(99, 0)
+  return setPosition(100)
 }
 
 // Send command to close blinds all the way down
 def close() {
-  return setLevel(0, 0)
+  return setPosition(0)
 }
-
+ 
 // Send command to set blinds to a particular level (0..99)
-def setLevel(level, duration = null) {
+def setPosition(position) {
+  if (position > 99) { // trim position to 99 (because capability allows 0..100, but simon works with 0..99)
+    position = 99
+  }
+  
   return [
-    secure(zwave.switchMultilevelV1.switchMultilevelSet(value: level)),
+    secure(zwave.switchMultilevelV1.switchMultilevelSet(value: position)),
     "delay 1000",
     secure(zwave.configurationV2.configurationGet(parameterNumber: CONFIG_LOAD_STATE)),
   ]
 }
 
+// Same as open or close but using parameter
+def startPositionChange(direction) {
+  setPosition(direction == "open" ? 100 : 0)
+}
+
 // Stop blinds movement, if blind is currently opening or closing
-def stop() {
+def stopPositionChange() {
   return [
     secure(zwave.switchMultilevelV3.switchMultilevelStopLevelChange()),
     "delay 1000",
@@ -116,20 +121,36 @@ def refreshLoadState() {
   return secure(zwave.configurationV2.configurationGet(parameterNumber: CONFIG_LOAD_STATE))
 }
 
+// calculate windowShade value based on position
+def windowShadeByPosition(position) {
+  if (position == 0) {
+    return "closed"
+  }
+   
+  if (position >= 99) {
+    return "open"
+  }
+  
+  return "partially closed"
+}
+
 // Set state and level as reported by configuration parameter 21 (load state)
 void setLoadState(value) {
   int state = (long) value >> 8
   int level = (long) value % 256
-
-  if (state == 0) {
-    sendEvent(name: "state", value: "off", isStateChange: true, type: "physical")
-    return;
+  if (level == 99) { // report 99 as 100 to match capability range
+    level = 100
   }
 
-  sendEvent(name: "state", value: state == 1 ? "opening" : "closing", isStateChange: true, type: "physical")
-  sendEvent(name: "level", value: level, isStateChange: true, type: "physical")
+  if (state == 0) {
+    sendEvent(name: "windowShade", value: windowShadeByPosition(level), isStateChange: true, type: "physical")
+  } else {
+    sendEvent(name: "windowShade", value: state == 1 ? "opening" : "closing", isStateChange: true, type: "physical")
+    runIn(2, refreshLoadState)
+  }
 
-  runIn(2, refreshLoadState)
+  sendEvent(name: "position", value: level, isStateChange: true, type: "physical")
+
 }
 
 // Set calibration as reported by configuration parameter 23 (Calibration Required)
