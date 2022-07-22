@@ -1,5 +1,5 @@
 /**
- *  Simon IO Roller Blind
+ *  Simon IO Switch
  *  Copyright 2022 Sergey Kolodyazhnyy
  */
 
