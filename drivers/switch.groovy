@@ -23,7 +23,7 @@ metadata {
     // This option allows to prevent user from pressing physical button right after it has been "pressed" by an automation. For example, if you have 
     // a motion detector which turns on the light, it might happen that user, not used to automation, will press switch just a moment after it has 
     // been turned on by motion detector - turning the light off. It might feel very frustrating. This option prevents this by blocking user input 
-    // during short period of time before switching lights on or off and unlbocking it a second after.
+    // just before switching lights on or off and unlbocking it a second after.
     input name: "preventConcurrent", type: "bool", title: "Prevent concurrent switch", defaultValue: false
     input name: "associationLed", type: "bool", title: "Association LED", defaultValue: false
     input name: "reposeLed", type: "bool", title: "Behavior of LED in Repose", defaultValue: false
