@@ -19,6 +19,11 @@ metadata {
   
   preferences {
     input name: "logEnable", type: "bool", title: "Enable logging", defaultValue: false
+    
+    // This option allows to prevent user from pressing physical button right after it has been "pressed" via automation. For example, if you have a motion detector which turns on the light it 
+    // might happen that user will press switch just a moment after it has been turned on by motion detector - turning light off. It might feel very frustrating. This option prevents this by 
+    // blocking user input during short period of time before switching lights on or off.   
+    input name: "preventConcurrent", type: "bool", title: "Prevent concurrent switch", defaultValue: false
     input name: "associationLed", type: "bool", title: "Association LED", defaultValue: false
     input name: "reposeLed", type: "bool", title: "Behavior of LED in Repose", defaultValue: false
     input name: "delayOn", type: "number", title: "Delay on (seconds*)", defaultValue: 0
@@ -45,11 +50,29 @@ metadata {
 
 // Turn switch ON
 def on() {
+  if (preventConcurrent) {
+    return [
+      secure(zwave.configurationV2.configurationSet(parameterNumber: CONFIG_LOCK_INPUT, scaledConfigurationValue: 0xFF)), // lock input
+      secure(zwave.basicV1.basicSet(value: 0xFF)), // turn on switch
+      "delay 1000",
+      secure(zwave.configurationV2.configurationSet(parameterNumber: CONFIG_LOCK_INPUT, scaledConfigurationValue: 0x00)), // unlcok input
+    ]
+  }
+  
   return secure(zwave.basicV1.basicSet(value: 0xFF))
 }
 
 // Turn switch OFF
 def off() {
+  if (preventConcurrent) {
+    return [
+      secure(zwave.configurationV2.configurationSet(parameterNumber: CONFIG_LOCK_INPUT, scaledConfigurationValue: 0xFF)), // lock input
+      secure(zwave.basicV1.basicSet(value: 0x00)), // turn off switch
+      "delay 1000",
+      secure(zwave.configurationV2.configurationSet(parameterNumber: CONFIG_LOCK_INPUT, scaledConfigurationValue: 0x00)), // unlcok input
+    ]
+  }
+  
   return secure(zwave.basicV1.basicSet(value: 0x00))
 }
 
